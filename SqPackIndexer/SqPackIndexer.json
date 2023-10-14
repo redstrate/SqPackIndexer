@@ -1,0 +1,8 @@
+{
+  "Author": "redstrate",
+  "Name": "SqPack Indexer",
+  "Punchline": "Helps index SqPack files in real time.",
+  "Description": "Keeps track of files the game opens, to index otherwise unknown filenames.",
+  "InternalName": "sqPackIndexer",
+  "ApplicableVersion": "any"
+}

@@ -1,0 +1,9 @@
+namespace SqPackIndexer
+{
+    public static class Sigs
+    {
+        public const string ResourceManager = "48 8B 05 ?? ?? ?? ?? 33 ED F0";
+        public const string ReadFile = "E8 ?? ?? ?? ?? 84 C0 0F 84 ?? 00 00 00 4C 8B C3 BA 05";
+        public const string ReadSqPack = "E8 ?? ?? ?? ?? EB 05 E8 ?? ?? ?? ?? 84 C0 0F 84 ?? 00 00 00 4C 8B C3";
+    }
+}
