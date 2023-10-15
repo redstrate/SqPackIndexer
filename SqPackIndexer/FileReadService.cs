@@ -1,10 +1,41 @@
 using System;
+using System.IO.Enumeration;
+using System.Net.Http;
+using System.Text;
 using System.Threading;
 using Dalamud.Hooking;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility.Signatures;
+using Newtonsoft.Json;
 
 namespace SqPackIndexer;
+
+public class ApiRequest
+{
+    public string filename;
+}
+
+public class HttpHelper
+{
+    private static HttpClient sharedClient = new()
+    {
+        BaseAddress = new Uri("http://127.0.0.1:3500"),
+    };
+
+    public async void sendFilename(String filename)
+    {
+        using StringContent jsonContent = new(JsonConvert.SerializeObject(new
+                ApiRequest {
+                    filename = filename
+                }),
+            Encoding.UTF8,
+            "application/json");
+
+        using HttpResponseMessage response = await sharedClient.PostAsync(
+            "add_hash",
+            jsonContent);
+    }
+}
 
 public unsafe class FileReadService : IDisposable
 {
@@ -13,6 +44,7 @@ public unsafe class FileReadService : IDisposable
         _resourceManager = resourceManager;
         interop.InitializeFromAttributes(this);
         _readSqPackHook.Enable();
+        _httpHelper = new HttpHelper();
     }
 
     /// <summary> Invoked when a file is supposed to be read from SqPack. </summary>
@@ -53,10 +85,14 @@ public unsafe class FileReadService : IDisposable
     [Signature(Sigs.ReadSqPack, DetourName = nameof(ReadSqPackDetour))]
     private readonly Hook<ReadSqPackPrototype> _readSqPackHook = null!;
 
+    private readonly HttpHelper _httpHelper;
+    
     private byte ReadSqPackDetour(nint resourceManager, SeFileDescriptor* fileDescriptor, int priority, bool isSync)
     {
         Dalamud.Logging.PluginLog.Log("Got detour: " + fileDescriptor->ResourceHandle->FileName);
 
+        _httpHelper.sendFilename(fileDescriptor->ResourceHandle->FileName.ToString());
+        
         byte?     ret         = null;
         _lastFileThreadResourceManager.Value = resourceManager;
         ReadSqPack?.Invoke(fileDescriptor, ref priority, ref isSync, ref ret);
